@@ -1,0 +1,15 @@
+APO:
+  telescope_diameter_m: 2.5
+  fiber_diameter_arcsec: 2.0
+  gain_e_per_adu: 1.9
+  read_noise_e: 12.0
+  dark_current_e_per_s: 0.01
+  npix_extract: 4
+
+LCO:
+  telescope_diameter_m: 2.5
+  fiber_diameter_arcsec: 1.31
+  gain_e_per_adu: 1.9
+  read_noise_e: 12.0
+  dark_current_e_per_s: 0.01
+  npix_extract: 4

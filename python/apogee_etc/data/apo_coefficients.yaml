@@ -1,0 +1,25 @@
+name: APO
+
+zeropoint:
+  value: 7.670
+  description: log10(e-/s) at H=0 under reference conditions
+  reference_conditions:
+    seeing_fwhm: 1.3
+    airmass: 1.2
+    moon_fraction: 0.0
+
+throughput:
+  seeing_slope: -0.174
+  seeing_quadratic: -0.024
+  airmass_slope: -0.080
+  moon_slope: 0.000
+  cloud_slope: 0.000
+
+noise_floor:
+  fractional: 0.010
+  additive_electrons: 0.0
+
+valid_ranges:
+  seeing_fwhm: [0.7, 3.0]
+  airmass: [1.0, 2.0]
+  hmag: [7.0, 15.5]
