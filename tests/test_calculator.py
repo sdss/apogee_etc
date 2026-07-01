@@ -22,3 +22,14 @@ def test_exposure_time_solver_reaches_target():
     inp = ETCInput(observatory="APO", hmag=15, exptime_s=500, nexp=4)
     out = exposure_time_for_snr(inp, target_snr=20)
     assert out.snr >= 20
+
+def test_exposure_time_solver_near_known_solution():
+    inp = ETCInput(hmag=12, exptime=500)
+    snr = calculate_snr(inp).snr
+
+    t = solve_exposure_time(
+        target_snr=snr,
+        etc_input=inp
+    )
+
+    assert abs(t - 500) < 20
