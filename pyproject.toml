@@ -19,6 +19,12 @@ dependencies = [
 app = ["streamlit>=1.30", "pandas>=2"]
 test = ["pytest>=7"]
 
+[tool.setuptools]
+package-dir = {"" = "python"}
+
+[tool.setuptools.packages.find]
+where = ["python"]
+
 [tool.setuptools.package-data]
 apogee_etc = ["data/*.yaml"]
 
