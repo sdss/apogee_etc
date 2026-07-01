@@ -1,0 +1,11 @@
+# Starter placeholder coefficients. Replace with empirical APOGEE/APOGEE-S calibrations.
+APO:
+  empirical_zp_log10_e_per_s_h0: 7.67
+  seeing_slope_dex_per_arcsec: -0.17
+  airmass_slope_dex_per_airmass: -0.08
+  empirical_noise_floor_frac: 0.02
+LCO:
+  empirical_zp_log10_e_per_s_h0: 7.50
+  seeing_slope_dex_per_arcsec: -0.12
+  airmass_slope_dex_per_airmass: -0.08
+  empirical_noise_floor_frac: 0.02
