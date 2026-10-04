@@ -28,6 +28,9 @@ class ObservatoryConfig:
     airmass_slope_dex_per_airmass: float = 0.0
     empirical_noise_floor_frac: float = 0.0
     notes: str = ""
+    full_moon_e_per_s_arcsec2: float = 0.0
+    galactic_high_e_per_s_arcsec2: float = 0.0
+    galactic_low_e_per_s_arcsec2: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -42,6 +45,11 @@ class ETCInput:
     fiber_coupling_model: str = "gaussian"
     include_empirical_terms: bool = True
     target_snr: float | None = None
+    moon_illumination: float = 0.0  # Fraction, 0 (new) to 1 (full).
+    moon_above_horizon: bool = True
+    galactic_latitude: str = "high"
+    full_moon_e_per_s_arcsec2: float | None = None
+    galactic_e_per_s_arcsec2: float | None = None
 
 
 @dataclass(frozen=True)
@@ -57,3 +65,6 @@ class ETCOutput:
     fiber_fraction: float
     observatory: str
     warnings: list[str] = field(default_factory=list)
+    atmospheric_sky_electrons: float = 0.0
+    moon_electrons: float = 0.0
+    galactic_electrons: float = 0.0

@@ -87,3 +87,29 @@ The final signal-to-noise ratio is
    {\rm S/N}
    =
    \frac{N_\star}{\sigma}.
+
+Moon and Galactic background
+----------------------------
+
+The background count is the sum of atmospheric sky, scattered moonlight,
+and unresolved Galactic starlight, each multiplied by fiber area and total
+integration time. ``sky_electrons`` remains the total of all three components.
+The individual counts are also returned for the noise budget.
+
+``moon_illumination`` is a fraction from 0 (new Moon) to 1 (full Moon).
+The added moonlight rate is illumination times ``full_moon_e_per_s_arcsec2``;
+it is zero when ``moon_above_horizon`` is false. This is a configurable linear
+approximation at fixed geometry, not a calibrated lunar scattering model.
+Moon altitude and target separation are not modeled.
+
+``galactic_latitude`` selects ``high`` or ``low`` observatory coefficients.
+``galactic_e_per_s_arcsec2`` can override the selected coefficient. This term
+represents additive unresolved starlight, not individual contaminating stars.
+All background rates must be finite and nonnegative, in electrons per second
+per square arcsecond for the same spectral interval as the stellar rate.
+The existing sky override applies only to the atmospheric component.
+
+Moon and Galactic coefficients default to zero pending APO/LCO calibration.
+The app exposes editable rates and warns when a selected coefficient is zero.
+Existing calls retain their numerical predictions. The new terms add photon
+noise; uncertainty in background subtraction is not included.

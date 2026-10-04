@@ -60,7 +60,33 @@ def calculate_snr(inp: ETCInput) -> ETCOutput:
         if inp.sky_e_per_s_arcsec2 is None
         else inp.sky_e_per_s_arcsec2
     )
-    sky_e = sky_rate_area * fiber_area_arcsec2(obs.fiber_diameter_arcsec) * total_exptime_s
+    if not np.isfinite(inp.moon_illumination) or not 0 <= inp.moon_illumination <= 1:
+        raise ValueError("moon_illumination must be between 0 and 1")
+    if inp.galactic_latitude not in {"high", "low"}:
+        raise ValueError("galactic_latitude must be 'high' or 'low'")
+    full_moon_rate = (obs.full_moon_e_per_s_arcsec2
+                      if inp.full_moon_e_per_s_arcsec2 is None
+                      else inp.full_moon_e_per_s_arcsec2)
+    galactic_rate = (getattr(obs, f"galactic_{inp.galactic_latitude}_e_per_s_arcsec2")
+                     if inp.galactic_e_per_s_arcsec2 is None
+                     else inp.galactic_e_per_s_arcsec2)
+    for rate in (sky_rate_area, full_moon_rate, galactic_rate):
+        if not np.isfinite(rate) or rate < 0:
+            raise ValueError("Background rates must be finite and nonnegative")
+    # A configurable approximation at fixed Moon/target geometry, not a
+    # calibrated scattered-moonlight model. Rates use the same spectral unit
+    # as the stellar rate and the original atmospheric sky rate.
+    moon_rate = (full_moon_rate * inp.moon_illumination
+                 if inp.moon_above_horizon else 0.0)
+    area_time = fiber_area_arcsec2(obs.fiber_diameter_arcsec) * total_exptime_s
+    atmospheric_e = sky_rate_area * area_time
+    moon_e = moon_rate * area_time
+    galactic_e = galactic_rate * area_time
+    sky_e = atmospheric_e + moon_e + galactic_e
+    if inp.moon_above_horizon and inp.moon_illumination > 0 and full_moon_rate == 0:
+        warnings.append("Moon background coefficient is unset (zero); illumination has no effect.")
+    if galactic_rate == 0:
+        warnings.append("Selected Galactic background coefficient is unset (zero).")
 
     dark_e = obs.dark_current_e_per_s_pix * obs.npix_per_resolution_element * total_exptime_s
     rn_var = inp.nexp * obs.npix_per_resolution_element * obs.read_noise_e**2
@@ -82,6 +108,9 @@ def calculate_snr(inp: ETCInput) -> ETCOutput:
         fiber_fraction=float(fiber_fraction),
         observatory=obs.name,
         warnings=warnings,
+        atmospheric_sky_electrons=float(atmospheric_e),
+        moon_electrons=float(moon_e),
+        galactic_electrons=float(galactic_e),
     )
 
 
