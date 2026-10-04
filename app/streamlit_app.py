@@ -25,8 +25,8 @@ with st.sidebar:
     hmag = st.number_input("H magnitude", value=15.0, step=0.1)
     exptime_s = st.number_input("Exposure time per exposure [s]", value=500.0, step=50.0, min_value=1.0)
     nexp = st.number_input("Number of exposures", value=8, step=1, min_value=1)
-    seeing = st.number_input("Seeing FWHM [arcsec]", value=1.3, step=0.1, min_value=0.1)
-    airmass = st.number_input("Airmass", value=1.2, step=0.05, min_value=1.0)
+    seeing = st.number_input("Seeing FWHM [arcsec]", value=obs.seeing_ref_arcsec, step=0.1, min_value=0.1, key=f"seeing_{observatory}")
+    airmass = st.number_input("Airmass", value=obs.airmass_ref, step=0.05, min_value=1.0, key=f"airmass_{observatory}")
     target_snr = st.number_input("Target S/N", value=50.0, step=5.0, min_value=1.0)
 
     st.subheader("Background conditions")

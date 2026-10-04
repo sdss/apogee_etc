@@ -144,10 +144,12 @@ correction is therefore f(seeing)/f(reference seeing), not f(seeing) alone.
 The output fiber fraction still reports the absolute Gaussian fraction.
 The residual empirical seeing slopes are set to zero pending calibration.
 
-Reference seeing remains provisionally 1.3 arcsec at APO and 1.1 at LCO;
-reference airmass remains 1.2 at both sites. These are assumptions, not
-sample medians inferred from the cuts. Replace them with representative
-conditions from the calibration sample. The airmass slope is -0.016
+Default and reference seeing is 1.58 arcsec at APO and 1.27 at LCO;
+reference airmass is 1.24 at APO and 1.16 at LCO, using supplied site medians.
+Omitted Python seeing/airmass inputs use these site-specific defaults.
+These medians are adopted fiducials; the stellar fit was restricted to seeing
+<1.5 and X<1.5, so its exact reference conditions remain to be established.
+The airmass slope is -0.016
 dex/airmass, corresponding to assumed k_H=0.04 mag/airmass.
 
 S/N is now explicitly labeled per green-detector spectral pixel. The

@@ -44,6 +44,9 @@ def _stellar_rate_e_per_s(inp: ETCInput) -> tuple[float, float]:
 
 def calculate_snr(inp: ETCInput) -> ETCOutput:
     obs = get_observatory(inp.observatory)
+    inp = replace(inp,
+                  seeing_fwhm_arcsec=obs.seeing_ref_arcsec if inp.seeing_fwhm_arcsec is None else inp.seeing_fwhm_arcsec,
+                  airmass=obs.airmass_ref if inp.airmass is None else inp.airmass)
     warnings: list[str] = []
 
     if inp.nexp < 1:

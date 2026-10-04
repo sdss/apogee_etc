@@ -43,8 +43,8 @@ class ETCInput:
     hmag: float = 15.0
     exptime_s: float = 500.0
     nexp: int = 1
-    seeing_fwhm_arcsec: float = 1.3
-    airmass: float = 1.2
+    seeing_fwhm_arcsec: float | None = None
+    airmass: float | None = None
     sky_e_per_s_arcsec2: float | None = None
     fiber_coupling_model: str = "gaussian"
     include_empirical_terms: bool = True

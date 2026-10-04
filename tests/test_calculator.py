@@ -137,3 +137,14 @@ def test_ramp_variance_and_discrete_solver(site):
     assert calculate_snr(replace(inp,exptime_s=(result.nreads-1)*10.6)).snr<20
     bounded=exposure_time_for_snr(inp,1e6,max_exptime_s=500)
     assert bounded.exptime_per_exposure_s<=500
+
+
+@pytest.mark.parametrize('site,seeing,airmass', [('APO',1.58,1.24),('LCO',1.27,1.16)])
+def test_site_specific_fiducials(site,seeing,airmass):
+    from apogee_etc.observatories import get_observatory
+    obs=get_observatory(site)
+    assert obs.seeing_ref_arcsec==seeing
+    assert obs.airmass_ref==airmass
+    default=calculate_snr(ETCInput(observatory=site))
+    explicit=calculate_snr(ETCInput(observatory=site,seeing_fwhm_arcsec=seeing,airmass=airmass))
+    assert default.snr==explicit.snr
