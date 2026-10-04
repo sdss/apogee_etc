@@ -19,7 +19,7 @@ class ObservatoryConfig:
     gain_e_per_adu: float
     read_noise_e: float
     dark_current_e_per_s_pix: float
-    npix_per_resolution_element: float
+    npix_per_resolution_element: float  # Legacy name: effective spatial extraction pixels.
     default_sky_e_per_s_arcsec2: float
     empirical_zp_log10_e_per_s_h0: float
     seeing_ref_arcsec: float = 1.3

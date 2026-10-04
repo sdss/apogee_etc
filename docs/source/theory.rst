@@ -151,7 +151,7 @@ conditions from the calibration sample. The airmass slope is -0.016
 dex/airmass, corresponding to assumed k_H=0.04 mag/airmass.
 
 S/N is now explicitly labeled per green-detector spectral pixel. The
-four-pixel detector-noise factor remains a provisional extraction-noise
+three-effective-pixel detector-noise factor remains a provisional extraction-noise
 approximation; it does not multiply the measured stellar or sky counts.
 
 
@@ -165,7 +165,7 @@ ADU/read * gain / 10.6: approximately 0.0128032351415 at APO and
 
 Measured single-read noise is stored separately as 20.9 electrons at APO
 and 24.0 at LCO. These values enter the ramp read-noise coefficient below. The legacy
-read_noise_e field is no longer used by the calculator. The four-pixel
+read_noise_e field is no longer used by the calculator. The three-effective-pixel
 extraction factor remains provisional pending extraction variance calibration.
 
 
@@ -187,3 +187,17 @@ variance = C*(star + sky + dark) + nexp*npix*A*single_read_noise**2
 multiplied by npix; this provisional factor applies to detector dark counts
 and read variance. Exact extraction-weight propagation is still needed.
 The app displays all budget components as variances in electrons squared.
+
+
+Effective extraction factor
+----------------------------
+
+For an approximately Gaussian spatial profile with FWHM 2 detector pixels,
+uniform-variance optimal extraction gives N_eff = 1/sum(P_i**2), approximately
+2*sqrt(pi)*(2/2.355) = 3.01. Both observatories adopt 3.0 for the existing
+npix_per_resolution_element field. Despite its legacy name, this is an
+effective spatial extraction factor per extracted spectral pixel, not a
+spectral resolution-element width or the number of pixels in the aperture.
+It scales detector read variance and dark counts; measured extracted stellar
+and sky counts retain their existing normalization. The factor is approximate
+and should be checked using actual extraction weights.
