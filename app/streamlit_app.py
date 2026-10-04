@@ -98,21 +98,27 @@ with st.expander("S/N, flux and noise versus H magnitude", expanded=True):
         rows.append({"H magnitude": h, "S/N": grid_out.snr,
                      "Flux": grid_out.flux_electrons, "Noise": grid_out.noise_electrons})
     df = pd.DataFrame(rows)
-    tabs = st.tabs(["S/N", "Flux", "Noise"])
-    labels = {"S/N": f"S/N per {snr_labels[snr_unit]}",
-              "Flux": "Stellar flux [e⁻/bin]", "Noise": "Noise, 1σ [e⁻/bin]"}
-    for tab, quantity in zip(tabs, labels):
-        with tab:
-            chart = (alt.Chart(df).mark_line().encode(
-                x=alt.X("H magnitude:Q", title="H magnitude"),
-                y=alt.Y(f"{quantity}:Q", title=labels[quantity], scale=alt.Scale(type="log")),
-                tooltip=[alt.Tooltip("H magnitude:Q", format=".2f"),
-                         alt.Tooltip(f"{quantity}:Q", format=".2f")],
-            ).properties(height=350))
-            marker = alt.Chart(df[df["H magnitude"] == hmag]).mark_point(
-                filled=True, size=70, color="orange").encode(
-                x="H magnitude:Q", y=f"{quantity}:Q")
-            st.altair_chart(chart + marker, use_container_width=True)
+    plot_df = df.melt(id_vars="H magnitude", value_vars=["S/N", "Flux", "Noise"],
+                      var_name="Quantity", value_name="Value")
+    colors = alt.Scale(domain=["S/N", "Flux", "Noise"],
+                       range=["#2563eb", "#e68613", "#159467"])
+    chart = alt.Chart(plot_df).mark_line(strokeWidth=2).encode(
+        x=alt.X("H magnitude:Q", title="H magnitude"),
+        y=alt.Y("Value:Q", title="S/N (dimensionless); flux and noise (e⁻/bin)",
+                scale=alt.Scale(type="log")),
+        color=alt.Color("Quantity:N", scale=colors, title="Quantity"),
+        tooltip=[alt.Tooltip("H magnitude:Q", format=".2f"),
+                 "Quantity:N", alt.Tooltip("Value:Q", format=".2f")],
+    ).properties(height=400)
+    marker = alt.Chart(plot_df[plot_df["H magnitude"] == hmag]).mark_point(
+        filled=True, size=65).encode(
+        x="H magnitude:Q", y="Value:Q",
+        color=alt.Color("Quantity:N", scale=colors, title="Quantity"),
+        tooltip=["Quantity:N", alt.Tooltip("Value:Q", format=".2f")],
+    )
+    st.altair_chart(chart + marker, use_container_width=True)
+    st.caption(f"All curves use {snr_labels[snr_unit]} and the displayed total integration. "
+               "Flux and noise are in electrons per bin; S/N is dimensionless.")
 
 st.caption(f"Per exposure: {out.exptime_per_exposure_s:.1f} s; "
            f"{out.nreads} total reads, {out.ngdreads} good reads. "
