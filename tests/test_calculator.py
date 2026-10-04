@@ -166,3 +166,11 @@ def test_snr_units_and_solver(unit,width):
 def test_invalid_snr_unit():
     with pytest.raises(ValueError):
         calculate_snr(ETCInput(snr_unit='unknown'))
+
+
+@pytest.mark.parametrize('unit,q', [('native',1),('apvisit',0.5),('apstar',0.2229/0.2844),('resolution',0.4458/0.2844)])
+def test_flux_noise_selected_bin(unit,q):
+    out=calculate_snr(ETCInput(snr_unit=unit,nexp=4))
+    assert np.isclose(out.flux_electrons,out.stellar_electrons*q)
+    assert np.isclose(out.noise_electrons,out.total_noise_electrons*np.sqrt(q))
+    assert np.isclose(out.flux_electrons/out.noise_electrons,out.snr)

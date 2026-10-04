@@ -77,105 +77,42 @@ else:
 
 cols = st.columns(3)
 cols[0].metric(f"S/N per {snr_labels[snr_unit]}", f"{out.snr:.1f}")
-cols[1].metric("Total exposure", f"{out.total_exptime_s:.0f} s")
-cols[2].metric("Fiber fraction", f"{out.fiber_fraction:.3f}")
+cols[1].metric("Stellar flux [e⁻/bin]", f"{out.flux_electrons:,.2f}")
+cols[2].metric("Noise, 1σ [e⁻/bin]", f"{out.noise_electrons:,.2f}")
+st.caption("Flux is sky-subtracted stellar electrons summed over all exposures; "
+           "noise includes star, background, dark and read noise. "
+           "Both use the selected pixel or resolution-element width.")
+cols = st.columns(2)
+cols[0].metric("Total exposure", f"{out.total_exptime_s:.1f} s")
+cols[1].metric("Fiber fraction", f"{out.fiber_fraction:.3f}")
 
-# -----------------------------
-# S/N versus H magnitude plot
-# -----------------------------
-with st.expander("S/N versus H magnitude", expanded=True):
-
-
-    plot_range = st.slider(
-        "Magnitude range about target",
-        1.0,
-        6.0,
-        3.0,
-        0.5,
-    )
-
+with st.expander("S/N, flux and noise versus H magnitude", expanded=True):
+    plot_range = st.slider("Magnitude range about target", 1.0, 6.0, 3.0, 0.5)
     hmin = max(5.0, hmag - plot_range)
     hmax = min(20.0, hmag + plot_range)
-
-    
-    #default_hmin = max(5.0, hmag - 3.0)
-    #default_hmax = min(20.0, hmag + 3.0)
-
-    #hmin = st.slider(
-    #    "Minimum H magnitude",
-    #    min_value=5.0,
-    #    max_value=20.0,
-    #    value=default_hmin,
-    #    step=0.5,
-    #    key="hmin",
-    #)
-
-    #hmax = st.slider(
-    #    "Maximum H magnitude",
-    #    min_value=5.0,
-    #    max_value=20.0,
-    #    value=default_hmax,
-    #    step=0.5,
-    #    key="hmax",
-    #)
-
-    hmags = np.linspace(hmin, hmax, 100)
-
+    hmags = np.unique(np.append(np.linspace(hmin, hmax, 100), hmag))
     rows = []
     for h in hmags:
-        grid_inp = replace(
-            inp,
-            hmag=float(h),
-            exptime_s=out.exptime_per_exposure_s,
-        )
-
-        grid_out = calculate_snr(grid_inp)
-
-        rows.append(
-            {
-                "H magnitude": h,
-                "S/N": grid_out.snr,
-            }
-        )
-
+        grid_out = calculate_snr(replace(inp, hmag=float(h),
+                                       exptime_s=out.exptime_per_exposure_s))
+        rows.append({"H magnitude": h, "S/N": grid_out.snr,
+                     "Flux": grid_out.flux_electrons, "Noise": grid_out.noise_electrons})
     df = pd.DataFrame(rows)
-
-
-    chart = (
-        alt.Chart(df)
-        .mark_line()
-        .encode(
-            x=alt.X(
-                "H magnitude:Q",
-                title="H magnitude",
-            ),
-            y=alt.Y(
-                "S/N:Q",
-                title=f"S/N per {snr_labels[snr_unit]}",
-                scale=alt.Scale(type="log"),
-            ),
-            tooltip=[
-                alt.Tooltip("H magnitude:Q", format=".2f"),
-                alt.Tooltip("S/N:Q", format=".2f"),
-            ],
-        )
-        .properties(height=400)
-    )
-    
-    st.altair_chart(chart, use_container_width=True)
-
-
-
-
-
-    
-    #st.line_chart(
-    #    df,
-    #    x="H magnitude",
-    #    y="S/N",
-    #    use_container_width=True,
-    #)
-
+    tabs = st.tabs(["S/N", "Flux", "Noise"])
+    labels = {"S/N": f"S/N per {snr_labels[snr_unit]}",
+              "Flux": "Stellar flux [e⁻/bin]", "Noise": "Noise, 1σ [e⁻/bin]"}
+    for tab, quantity in zip(tabs, labels):
+        with tab:
+            chart = (alt.Chart(df).mark_line().encode(
+                x=alt.X("H magnitude:Q", title="H magnitude"),
+                y=alt.Y(f"{quantity}:Q", title=labels[quantity], scale=alt.Scale(type="log")),
+                tooltip=[alt.Tooltip("H magnitude:Q", format=".2f"),
+                         alt.Tooltip(f"{quantity}:Q", format=".2f")],
+            ).properties(height=350))
+            marker = alt.Chart(df[df["H magnitude"] == hmag]).mark_point(
+                filled=True, size=70, color="orange").encode(
+                x="H magnitude:Q", y=f"{quantity}:Q")
+            st.altair_chart(chart + marker, use_container_width=True)
 
 st.caption(f"Per exposure: {out.exptime_per_exposure_s:.1f} s; "
            f"{out.nreads} total reads, {out.ngdreads} good reads. "

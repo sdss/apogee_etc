@@ -232,3 +232,17 @@ factor is introduced: nexp already counts the input exposures. As for apStar,
 this is a wavelength-bin approximation rather than a simulation of dither
 combination, its weights, or pixel covariance. The detector noise budget
 continues to be reported per native apCframe pixel.
+
+
+Flux and noise outputs
+-----------------------
+
+``flux_electrons`` is sky-subtracted stellar signal summed over all exposures
+in the selected wavelength bin. ``noise_electrons`` is its 1-sigma noise.
+For width ratio q = selected_width/native_width, flux = native_flux*q and
+noise = native_noise*sqrt(q), so flux/noise equals the reported S/N.
+These are summed electron-equivalent counts, not count rates, ADU, or the
+normalization of actual pipeline combined files (which may use averages).
+The app shows both values and separate S/N, flux and noise magnitude plots,
+all at the same selected bin width, observing conditions and integration.
+The native noise budget and its output fields remain unchanged.

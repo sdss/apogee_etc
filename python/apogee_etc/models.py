@@ -80,3 +80,5 @@ class ETCOutput:
     native_snr: float = 0.0
     snr_unit: str = "native"
     snr_bin_width_angstrom: float = 0.2844
+    flux_electrons: float = 0.0
+    noise_electrons: float = 0.0
