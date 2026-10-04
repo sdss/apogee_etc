@@ -164,7 +164,26 @@ ADU/read * gain / 10.6: approximately 0.0128032351415 at APO and
 0.0144397386792 at LCO, in electrons/s/detector pixel.
 
 Measured single-read noise is stored separately as 20.9 electrons at APO
-and 24.0 at LCO. These values are not substituted directly for effective
-exposure read noise. The calculator still uses the provisional effective
-read-noise parameter and four-pixel extraction factor until ramp read-count
-handling and extraction variance propagation are implemented.
+and 24.0 at LCO. These values enter the ramp read-noise coefficient below. The legacy
+read_noise_e field is no longer used by the calculator. The four-pixel
+extraction factor remains provisional pending extraction variance calibration.
+
+
+Ramp noise and whole-read timing
+--------------------------------
+
+The adopted ETC timing convention is exposure_time = nreads * 10.6 s.
+Requested times round up to whole reads, with a minimum of three total reads
+(two good reads). One initial read is discarded: ngdreads = nreads - 1.
+All flux components use the resulting duration. The exposure-time solver
+searches integers and returns the shortest whole-read duration reaching the
+target within its bounds, without rounding above the maximum bound.
+
+For N total and G good reads the detector read variance coefficient is
+A = 12*(G-1)/(N*(G+1)), and the photon variance coefficient is
+C = 6*(G**2+1)/(5*G*(G+1)). The extracted-spectrum approximation is
+variance = C*(star + sky + dark) + nexp*npix*A*single_read_noise**2
++ empirical_variance. The measured extracted star and sky counts are not
+multiplied by npix; this provisional factor applies to detector dark counts
+and read variance. Exact extraction-weight propagation is still needed.
+The app displays all budget components as variances in electrons squared.

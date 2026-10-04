@@ -83,10 +83,10 @@ def test_measured_sky_levels(site,new,full,low):
     from apogee_etc.physics import fiber_area_arcsec2
     area=fiber_area_arcsec2(get_observatory(site).fiber_diameter_arcsec)
     inp=ETCInput(observatory=site, exptime_s=500, nexp=1)
-    assert np.isclose(calculate_snr(inp).sky_electrons/area,new)
-    assert np.isclose(calculate_snr(replace(inp,moon_illumination=1)).sky_electrons/area,full)
+    assert np.isclose(calculate_snr(inp).sky_electrons/area*500/calculate_snr(inp).exptime_per_exposure_s,new)
+    assert np.isclose(calculate_snr(replace(inp,moon_illumination=1)).sky_electrons/area*500/calculate_snr(inp).exptime_per_exposure_s,full)
     for phase in (0,0.5,1):
-        assert np.isclose(calculate_snr(replace(inp,galactic_latitude='low',moon_illumination=phase)).sky_electrons/area,low)
+        assert np.isclose(calculate_snr(replace(inp,galactic_latitude='low',moon_illumination=phase)).sky_electrons/area*500/calculate_snr(inp).exptime_per_exposure_s,low)
 
 
 @pytest.mark.parametrize('site,z,slope,gain,time', [
@@ -101,7 +101,7 @@ def test_measured_stellar_flux_at_reference(site,z,slope,gain,time):
                      seeing_fwhm_arcsec=obs.seeing_ref_arcsec,
                      airmass=obs.airmass_ref)
         out=calculate_snr(inp)
-        assert np.isclose(out.stellar_electrons,gain*10**(z+slope*h))
+        assert np.isclose(out.stellar_electrons,gain*10**(z+slope*h)*out.exptime_per_exposure_s/time)
         worse=calculate_snr(replace(inp,seeing_fwhm_arcsec=2.0))
         assert worse.stellar_electrons < out.stellar_electrons
         assert np.isclose(calculate_snr(replace(inp,nexp=2)).stellar_electrons,
@@ -115,4 +115,25 @@ def test_measured_dark_conversion(site,adu,gain,rn):
     assert np.isclose(obs.dark_current_e_per_s_pix,adu*gain/10.6)
     assert obs.single_read_noise_e==rn
     out=calculate_snr(ETCInput(observatory=site,exptime_s=500,nexp=2))
-    assert np.isclose(out.dark_electrons,adu*gain/10.6*obs.npix_per_resolution_element*1000)
+    assert np.isclose(out.dark_electrons,adu*gain/10.6*obs.npix_per_resolution_element*out.total_exptime_s)
+
+
+@pytest.mark.parametrize('site', ['APO','LCO'])
+def test_ramp_variance_and_discrete_solver(site):
+    from apogee_etc.observatories import get_observatory
+    obs=get_observatory(site)
+    inp=ETCInput(observatory=site,exptime_s=500,nexp=2)
+    out=calculate_snr(inp)
+    assert out.nreads==48 and out.ngdreads==47
+    assert np.isclose(out.exptime_per_exposure_s,508.8)
+    a=12*46/(48*48)
+    c=6*(47**2+1)/(5*47*48)
+    rn=2*obs.npix_per_resolution_element*a*obs.single_read_noise_e**2
+    assert np.isclose(out.read_noise_variance_e2,rn)
+    assert np.isclose(out.total_noise_electrons**2,
+                      c*(out.stellar_electrons+out.sky_electrons+out.dark_electrons)+rn)
+    result=exposure_time_for_snr(inp,20)
+    assert result.snr>=20
+    assert calculate_snr(replace(inp,exptime_s=(result.nreads-1)*10.6)).snr<20
+    bounded=exposure_time_for_snr(inp,1e6,max_exptime_s=500)
+    assert bounded.exptime_per_exposure_s<=500

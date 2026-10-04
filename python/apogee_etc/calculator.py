@@ -48,7 +48,7 @@ def calculate_snr(inp: ETCInput) -> ETCOutput:
 
     if inp.nexp < 1:
         raise ValueError("nexp must be >= 1")
-    if inp.exptime_s <= 0:
+    if not np.isfinite(inp.exptime_s) or inp.exptime_s <= 0:
         raise ValueError("exptime_s must be positive")
     if inp.hmag < -5 or inp.hmag > 25:
         warnings.append("H magnitude is outside the usual calibrated range.")
@@ -57,7 +57,13 @@ def calculate_snr(inp: ETCInput) -> ETCOutput:
     if inp.airmass < 1.0 or inp.airmass > 2.5:
         warnings.append("Airmass is outside the nominal calibration range.")
 
-    total_exptime_s = inp.exptime_s * inp.nexp
+    # ETC convention: t = nreads * read interval, first read rejected.
+    nreads = max(3, int(np.ceil(inp.exptime_s / obs.read_interval_s - 1e-12)))
+    ngdreads = nreads - 1
+    actual_exptime_s = nreads * obs.read_interval_s
+    if not np.isclose(actual_exptime_s, inp.exptime_s, rtol=0, atol=1e-8):
+        warnings.append(f"Per-exposure time rounded up to {actual_exptime_s:.1f} s ({nreads} reads).")
+    total_exptime_s = actual_exptime_s * inp.nexp
     star_rate, fiber_fraction = _stellar_rate_e_per_s(inp)
     stellar_e = star_rate * total_exptime_s
 
@@ -95,10 +101,16 @@ def calculate_snr(inp: ETCInput) -> ETCOutput:
         warnings.append("Low-latitude background uses a representative median; measured field-to-field variation is large. Moon dependence is disabled for this regime.")
 
     dark_e = obs.dark_current_e_per_s_pix * obs.npix_per_resolution_element * total_exptime_s
-    rn_var = inp.nexp * obs.npix_per_resolution_element * obs.read_noise_e**2
+    read_factor = 12.0 * (ngdreads - 1) / (nreads * (ngdreads + 1))
+    photon_factor = 6.0 * (ngdreads**2 + 1) / (5.0 * ngdreads * (ngdreads + 1))
+    single_read_noise = obs.single_read_noise_e
+    if single_read_noise is None:
+        raise ValueError("single_read_noise_e must be configured for the ramp model")
+    rn_var = (inp.nexp * obs.npix_per_resolution_element
+              * read_factor * single_read_noise**2)
     empirical_var = (obs.empirical_noise_floor_frac * stellar_e) ** 2
 
-    variance = stellar_e + sky_e + dark_e + rn_var + empirical_var
+    variance = photon_factor * (stellar_e + sky_e + dark_e) + rn_var + empirical_var
     noise_e = float(np.sqrt(variance))
     snr = float(stellar_e / noise_e) if noise_e > 0 else 0.0
 
@@ -117,6 +129,10 @@ def calculate_snr(inp: ETCInput) -> ETCOutput:
         atmospheric_sky_electrons=float(atmospheric_e),
         moon_electrons=float(moon_e),
         galactic_electrons=float(galactic_e),
+        exptime_per_exposure_s=float(actual_exptime_s),
+        nreads=nreads,
+        ngdreads=ngdreads,
+        ramp_photon_variance_factor=float(photon_factor),
     )
 
 
@@ -127,26 +143,29 @@ def exposure_time_for_snr(
     max_exptime_s: float = 100_000.0,
     rtol: float = 1e-3,
 ) -> ETCOutput:
-    """Find per-exposure time required to reach a target S/N for fixed nexp."""
-    if target_snr <= 0:
-        raise ValueError("target_snr must be positive")
+    """Find the shortest whole-read exposure for fixed nexp.
 
-    lo = min_exptime_s
-    hi = max_exptime_s
-
-    out_hi = calculate_snr(replace(inp, exptime_s=hi))
+    rtol is retained for API compatibility; integer search is exact.
+    """
+    if not np.isfinite(target_snr) or target_snr <= 0:
+        raise ValueError("target_snr must be finite and positive")
+    if not 0 < min_exptime_s <= max_exptime_s or not np.isfinite(max_exptime_s):
+        raise ValueError("Exposure bounds must be finite, positive and ordered")
+    interval = get_observatory(inp.observatory).read_interval_s
+    lo = max(3, int(np.ceil(min_exptime_s / interval - 1e-12)))
+    hi = int(np.floor(max_exptime_s / interval + 1e-12))
+    if hi < lo:
+        raise ValueError("Exposure bounds contain no valid whole-read duration")
+    def evaluate(reads):
+        return calculate_snr(replace(inp, exptime_s=reads * interval))
+    out_hi = evaluate(hi)
     if out_hi.snr < target_snr:
         msg = f"Target S/N not reached by max_exptime_s={max_exptime_s}."
         return replace(out_hi, warnings=[*out_hi.warnings, msg])
-
-    for _ in range(80):
-        mid = 0.5 * (lo + hi)
-        out_mid = calculate_snr(replace(inp, exptime_s=mid))
-        if out_mid.snr < target_snr:
-            lo = mid
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if evaluate(mid).snr < target_snr:
+            lo = mid + 1
         else:
             hi = mid
-        if (hi - lo) / hi < rtol:
-            break
-
-    return calculate_snr(replace(inp, exptime_s=hi))
+    return evaluate(lo)

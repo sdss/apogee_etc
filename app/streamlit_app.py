@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -116,13 +118,10 @@ with st.expander("S/N versus H magnitude", expanded=True):
 
     rows = []
     for h in hmags:
-        grid_inp = ETCInput(
-            observatory=observatory,
+        grid_inp = replace(
+            inp,
             hmag=float(h),
-            exptime_s=exptime_s,
-            nexp=int(nexp),
-            seeing_fwhm_arcsec=seeing,
-            airmass=airmass,
+            exptime_s=out.exptime_per_exposure_s,
         )
 
         grid_out = calculate_snr(grid_inp)
@@ -173,16 +172,19 @@ with st.expander("S/N versus H magnitude", expanded=True):
     #)
 
 
-st.subheader("Noise budget")
+st.caption(f"Per exposure: {out.exptime_per_exposure_s:.1f} s; "
+           f"{out.nreads} total reads, {out.ngdreads} good reads. "
+           "Timing uses 10.6 s per read; one initial read is discarded.")
+st.subheader("Noise variance budget [e⁻²]")
 noise_budget = pd.DataFrame(
     {
         "component": ["Star", "Baseline sky", "Moon", "Galactic background", "Dark", "Read variance", "Empirical variance"],
         "value": [
-            out.stellar_electrons,
-            out.atmospheric_sky_electrons,
-            out.moon_electrons,
-            out.galactic_electrons,
-            out.dark_electrons,
+            out.ramp_photon_variance_factor * out.stellar_electrons,
+            out.ramp_photon_variance_factor * out.atmospheric_sky_electrons,
+            out.ramp_photon_variance_factor * out.moon_electrons,
+            out.ramp_photon_variance_factor * out.galactic_electrons,
+            out.ramp_photon_variance_factor * out.dark_electrons,
             out.read_noise_variance_e2,
             out.empirical_noise_variance_e2,
         ],

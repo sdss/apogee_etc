@@ -72,3 +72,7 @@ class ETCOutput:
     atmospheric_sky_electrons: float = 0.0
     moon_electrons: float = 0.0
     galactic_electrons: float = 0.0
+    exptime_per_exposure_s: float = 0.0
+    nreads: int = 0
+    ngdreads: int = 0
+    ramp_photon_variance_factor: float = 1.0
