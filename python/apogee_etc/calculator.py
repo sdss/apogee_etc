@@ -12,7 +12,7 @@ from .physics import fiber_area_arcsec2, gaussian_fiber_fraction
 def _stellar_rate_e_per_s(inp: ETCInput) -> tuple[float, float]:
     obs = get_observatory(inp.observatory)
 
-    log_rate = obs.empirical_zp_log10_e_per_s_h0 - 0.4 * inp.hmag
+    log_rate = obs.empirical_zp_log10_e_per_s_h0 + obs.stellar_magnitude_slope * inp.hmag
 
     if inp.include_empirical_terms:
         log_rate += obs.seeing_slope_dex_per_arcsec * (
@@ -22,10 +22,16 @@ def _stellar_rate_e_per_s(inp: ETCInput) -> tuple[float, float]:
             inp.airmass - obs.airmass_ref
         )
 
+    coupling_correction = 1.0
     if inp.fiber_coupling_model == "gaussian":
         fiber_fraction = gaussian_fiber_fraction(
             inp.seeing_fwhm_arcsec, obs.fiber_diameter_arcsec
         )
+        coupling_correction = fiber_fraction
+        if obs.normalize_fiber_at_reference:
+            coupling_correction /= gaussian_fiber_fraction(
+                obs.seeing_ref_arcsec, obs.fiber_diameter_arcsec
+            )
     elif inp.fiber_coupling_model in {"none", "empirical_only"}:
         fiber_fraction = 1.0
     else:
@@ -33,7 +39,7 @@ def _stellar_rate_e_per_s(inp: ETCInput) -> tuple[float, float]:
             "fiber_coupling_model must be 'gaussian', 'empirical_only', or 'none'"
         )
 
-    return float(10**log_rate * fiber_fraction), fiber_fraction
+    return float(10**log_rate * coupling_correction), fiber_fraction
 
 
 def calculate_snr(inp: ETCInput) -> ETCOutput:
@@ -77,16 +83,16 @@ def calculate_snr(inp: ETCInput) -> ETCOutput:
     # calibrated scattered-moonlight model. Rates use the same spectral unit
     # as the stellar rate and the original atmospheric sky rate.
     moon_rate = (full_moon_rate * inp.moon_illumination
-                 if inp.moon_above_horizon else 0.0)
+                 if inp.moon_above_horizon and inp.galactic_latitude == "high" else 0.0)
     area_time = fiber_area_arcsec2(obs.fiber_diameter_arcsec) * total_exptime_s
     atmospheric_e = sky_rate_area * area_time
     moon_e = moon_rate * area_time
     galactic_e = galactic_rate * area_time
     sky_e = atmospheric_e + moon_e + galactic_e
-    if inp.moon_above_horizon and inp.moon_illumination > 0 and full_moon_rate == 0:
+    if inp.galactic_latitude == "high" and inp.moon_above_horizon and inp.moon_illumination > 0 and full_moon_rate == 0:
         warnings.append("Moon background coefficient is unset (zero); illumination has no effect.")
-    if galactic_rate == 0:
-        warnings.append("Selected Galactic background coefficient is unset (zero).")
+    if inp.galactic_latitude == "low":
+        warnings.append("Low-latitude background uses a representative median; measured field-to-field variation is large. Moon dependence is disabled for this regime.")
 
     dark_e = obs.dark_current_e_per_s_pix * obs.npix_per_resolution_element * total_exptime_s
     rn_var = inp.nexp * obs.npix_per_resolution_element * obs.read_noise_e**2

@@ -43,7 +43,7 @@ def test_background_components_and_solver(site):
     dark = calculate_snr(base)
     half_inp = replace(base, moon_illumination=0.5,
                        full_moon_e_per_s_arcsec2=8,
-                       galactic_latitude='low', galactic_e_per_s_arcsec2=3)
+                       galactic_latitude='high', galactic_e_per_s_arcsec2=3)
     half = calculate_snr(half_inp)
     full = calculate_snr(replace(half_inp, moon_illumination=1))
     assert np.isclose(full.moon_electrons, 2 * half.moon_electrons)
@@ -65,3 +65,54 @@ def test_background_components_and_solver(site):
 def test_invalid_background_inputs(changes):
     with pytest.raises(ValueError):
         calculate_snr(ETCInput(**changes))
+
+
+@pytest.mark.parametrize('site', ['APO', 'LCO'])
+def test_no_artificial_snr_ceiling_and_latitude_effect(site):
+    inp = ETCInput(observatory=site, hmag=10, exptime_s=1000, nexp=8)
+    assert calculate_snr(inp).snr > 100
+    faint = replace(inp, hmag=16)
+    assert calculate_snr(replace(faint, galactic_latitude='low')).snr < calculate_snr(faint).snr
+    assert calculate_snr(replace(faint, moon_illumination=1)).snr < calculate_snr(faint).snr
+    assert exposure_time_for_snr(inp, 100).snr >= 100
+
+
+@pytest.mark.parametrize('site,new,full,low', [('APO',40,80,92), ('LCO',27,41.7,70)])
+def test_measured_sky_levels(site,new,full,low):
+    from apogee_etc.observatories import get_observatory
+    from apogee_etc.physics import fiber_area_arcsec2
+    area=fiber_area_arcsec2(get_observatory(site).fiber_diameter_arcsec)
+    inp=ETCInput(observatory=site, exptime_s=500, nexp=1)
+    assert np.isclose(calculate_snr(inp).sky_electrons/area,new)
+    assert np.isclose(calculate_snr(replace(inp,moon_illumination=1)).sky_electrons/area,full)
+    for phase in (0,0.5,1):
+        assert np.isclose(calculate_snr(replace(inp,galactic_latitude='low',moon_illumination=phase)).sky_electrons/area,low)
+
+
+@pytest.mark.parametrize('site,z,slope,gain,time', [
+    ('APO',7.7814155,-0.4,1.9,458),
+    ('LCO',7.312,-0.4,3.0,447),
+])
+def test_measured_stellar_flux_at_reference(site,z,slope,gain,time):
+    from apogee_etc.observatories import get_observatory
+    obs=get_observatory(site)
+    for h in (10,13,16):
+        inp=ETCInput(observatory=site,hmag=h,exptime_s=time,nexp=1,
+                     seeing_fwhm_arcsec=obs.seeing_ref_arcsec,
+                     airmass=obs.airmass_ref)
+        out=calculate_snr(inp)
+        assert np.isclose(out.stellar_electrons,gain*10**(z+slope*h))
+        worse=calculate_snr(replace(inp,seeing_fwhm_arcsec=2.0))
+        assert worse.stellar_electrons < out.stellar_electrons
+        assert np.isclose(calculate_snr(replace(inp,nexp=2)).stellar_electrons,
+                          2*out.stellar_electrons)
+
+
+@pytest.mark.parametrize('site,adu,gain,rn', [('APO',0.071428575,1.9,20.9), ('LCO',0.05102041,3.,24.)])
+def test_measured_dark_conversion(site,adu,gain,rn):
+    from apogee_etc.observatories import get_observatory
+    obs=get_observatory(site)
+    assert np.isclose(obs.dark_current_e_per_s_pix,adu*gain/10.6)
+    assert obs.single_read_noise_e==rn
+    out=calculate_snr(ETCInput(observatory=site,exptime_s=500,nexp=2))
+    assert np.isclose(out.dark_electrons,adu*gain/10.6*obs.npix_per_resolution_element*1000)

@@ -31,6 +31,10 @@ class ObservatoryConfig:
     full_moon_e_per_s_arcsec2: float = 0.0
     galactic_high_e_per_s_arcsec2: float = 0.0
     galactic_low_e_per_s_arcsec2: float = 0.0
+    stellar_magnitude_slope: float = -0.4
+    normalize_fiber_at_reference: bool = False
+    single_read_noise_e: float | None = None
+    read_interval_s: float = 10.6
 
 
 @dataclass(frozen=True)
