@@ -127,6 +127,8 @@ def calculate_snr(inp: ETCInput) -> ETCOutput:
     return ETCOutput(
         snr=float(scaled_snr),
         flux_electrons=float(stellar_e * bin_ratio),
+        seeing_flux_factor=float(10**(obs.seeing_slope_dex_per_arcsec *
+            (inp.seeing_fwhm_arcsec - obs.seeing_ref_arcsec))) if inp.include_empirical_terms else 1.0,
         noise_electrons=float(noise_e * np.sqrt(bin_ratio)),
         native_snr=snr,
         snr_unit=inp.snr_unit,

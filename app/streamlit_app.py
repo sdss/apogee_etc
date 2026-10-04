@@ -84,7 +84,7 @@ st.caption("Flux is sky-subtracted stellar electrons summed over all exposures; 
            "Both use the selected pixel or resolution-element width.")
 cols = st.columns(2)
 cols[0].metric("Total exposure", f"{out.total_exptime_s:.1f} s")
-cols[1].metric("Fiber fraction", f"{out.fiber_fraction:.3f}")
+cols[1].metric("Seeing flux factor", f"{out.seeing_flux_factor:.3f}")
 
 with st.expander("S/N, flux and noise versus H magnitude", expanded=True):
     plot_range = st.slider("Magnitude range about target", 1.0, 6.0, 3.0, 0.5)

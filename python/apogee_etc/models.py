@@ -46,7 +46,7 @@ class ETCInput:
     seeing_fwhm_arcsec: float | None = None
     airmass: float | None = None
     sky_e_per_s_arcsec2: float | None = None
-    fiber_coupling_model: str = "gaussian"
+    fiber_coupling_model: str = "empirical_only"
     include_empirical_terms: bool = True
     target_snr: float | None = None
     moon_illumination: float = 0.0  # Fraction, 0 (new) to 1 (full).
@@ -82,3 +82,4 @@ class ETCOutput:
     snr_bin_width_angstrom: float = 0.2844
     flux_electrons: float = 0.0
     noise_electrons: float = 0.0
+    seeing_flux_factor: float = 1.0

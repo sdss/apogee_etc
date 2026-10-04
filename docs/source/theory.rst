@@ -246,3 +246,19 @@ normalization of actual pipeline combined files (which may use averages).
 The app shows both values and one magnitude plot with differently colored S/N, flux and noise curves,
 all at the same selected bin width, observing conditions and integration.
 The native noise budget and its output fields remain unchanged.
+
+
+Empirical seeing correction (current default)
+----------------------------------------------
+
+The default fiber_coupling_model is now empirical_only. Measured log10 flux
+slopes are -0.18299435 dex/arcsec at APO and -0.23411219 at LCO. The stellar
+count rate is multiplied by 10**(slope*(seeing-reference_seeing)); no Gaussian
+fiber fraction is applied. The app reports this relative seeing flux factor,
+not an absolute fraction entering the fiber. The existing electron-rate
+zeropoints and fiducial conditions are retained. New seeing-fit intercepts
+are not used until their count units and exposure normalization are confirmed.
+Absolute fiber throughput is already included in the stellar normalization.
+These empirical slopes describe observed counts; extrapolation beyond the
+measured seeing range remains unvalidated. The older Gaussian discussion
+above documents the previous model, not the current default.

@@ -174,3 +174,16 @@ def test_flux_noise_selected_bin(unit,q):
     assert np.isclose(out.flux_electrons,out.stellar_electrons*q)
     assert np.isclose(out.noise_electrons,out.total_noise_electrons*np.sqrt(q))
     assert np.isclose(out.flux_electrons/out.noise_electrons,out.snr)
+
+
+@pytest.mark.parametrize('site,slope', [('APO',-.18299435),('LCO',-.23411219)])
+def test_empirical_seeing_replaces_gaussian(site,slope):
+    from apogee_etc.observatories import get_observatory
+    obs=get_observatory(site)
+    inp=ETCInput(observatory=site,seeing_fwhm_arcsec=obs.seeing_ref_arcsec)
+    ref=calculate_snr(inp)
+    worse=calculate_snr(replace(inp,seeing_fwhm_arcsec=obs.seeing_ref_arcsec+.5))
+    assert inp.fiber_coupling_model=='empirical_only'
+    assert np.isclose(worse.stellar_electrons/ref.stellar_electrons,10**(slope*.5))
+    assert np.isclose(worse.seeing_flux_factor,10**(slope*.5))
+    assert ref.seeing_flux_factor==1
