@@ -23,6 +23,7 @@ with st.sidebar:
     mode = st.radio("Mode", ["Predict S/N", "Exposure time for target S/N"])
 
     snr_labels = {"native": "Native pixel (apCframe)",
+                  "apvisit": "apVisit pixel (dithered)",
                   "apstar": "apStar pixel", "resolution": "Resolution element"}
     snr_unit = st.selectbox("S/N unit", list(snr_labels), format_func=snr_labels.get)
     hmag = st.number_input("H magnitude", value=15.0, step=0.1)

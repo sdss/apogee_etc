@@ -212,7 +212,7 @@ Measured stellar and sky counts refer to native apCframe spectral pixels,
 without dither combination or resampling. Native green-detector width is
 0.2844 Angstrom; apStar width is 0.2229 Angstrom. The adopted resolution
 width is twice the apStar width, 0.4458 Angstrom. ``snr_unit`` accepts
-``native`` (default), ``apstar``, or ``resolution``. Output S/N is native S/N
+``native`` (default), ``apvisit``, ``apstar``, or ``resolution``. Output S/N is native S/N
 times sqrt(selected width / native width), and the solver targets this unit.
 ``native_snr`` returns the original result. Electron counts and variance
 budget always refer to the native pixel; only the reported S/N changes.
@@ -220,3 +220,15 @@ This equivalent-bin approximation assumes locally uniform spectral signal
 and noise density. It does not predict actual resampled-pixel covariance,
 dither-combination weights, or apStar pipeline uncertainty values. No extra
 exposure factor is applied when changing the S/N unit.
+
+
+Dithered apVisit pixels
+-----------------------
+
+The apVisit option adopts half the native pixel width, 0.1422 Angstrom,
+with half the equivalent-bin flux and S/N equal to native S/N divided by
+sqrt(2), at fixed total integration. No additional exposure or dither-pair
+factor is introduced: nexp already counts the input exposures. As for apStar,
+this is a wavelength-bin approximation rather than a simulation of dither
+combination, its weights, or pixel covariance. The detector noise budget
+continues to be reported per native apCframe pixel.

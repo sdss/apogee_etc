@@ -150,7 +150,7 @@ def test_site_specific_fiducials(site,seeing,airmass):
     assert default.snr==explicit.snr
 
 
-@pytest.mark.parametrize('unit,width', [('native',0.2844),('apstar',0.2229),('resolution',0.4458)])
+@pytest.mark.parametrize('unit,width', [('native',0.2844),('apvisit',0.1422),('apstar',0.2229),('resolution',0.4458)])
 def test_snr_units_and_solver(unit,width):
     inp=ETCInput(snr_unit=unit,nexp=4)
     out=calculate_snr(inp)
