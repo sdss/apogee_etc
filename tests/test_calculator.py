@@ -148,3 +148,21 @@ def test_site_specific_fiducials(site,seeing,airmass):
     default=calculate_snr(ETCInput(observatory=site))
     explicit=calculate_snr(ETCInput(observatory=site,seeing_fwhm_arcsec=seeing,airmass=airmass))
     assert default.snr==explicit.snr
+
+
+@pytest.mark.parametrize('unit,width', [('native',0.2844),('apstar',0.2229),('resolution',0.4458)])
+def test_snr_units_and_solver(unit,width):
+    inp=ETCInput(snr_unit=unit,nexp=4)
+    out=calculate_snr(inp)
+    native=calculate_snr(replace(inp,snr_unit='native'))
+    assert np.isclose(out.snr,native.snr*np.sqrt(width/0.2844))
+    assert out.stellar_electrons==native.stellar_electrons
+    assert out.total_noise_electrons==native.total_noise_electrons
+    result=exposure_time_for_snr(inp,20)
+    assert result.snr>=20 and result.snr_unit==unit
+    assert calculate_snr(replace(inp,exptime_s=(result.nreads-1)*10.6)).snr<20
+
+
+def test_invalid_snr_unit():
+    with pytest.raises(ValueError):
+        calculate_snr(ETCInput(snr_unit='unknown'))

@@ -54,6 +54,7 @@ class ETCInput:
     galactic_latitude: str = "high"
     full_moon_e_per_s_arcsec2: float | None = None
     galactic_e_per_s_arcsec2: float | None = None
+    snr_unit: str = "native"
 
 
 @dataclass(frozen=True)
@@ -76,3 +77,6 @@ class ETCOutput:
     nreads: int = 0
     ngdreads: int = 0
     ramp_photon_variance_factor: float = 1.0
+    native_snr: float = 0.0
+    snr_unit: str = "native"
+    snr_bin_width_angstrom: float = 0.2844

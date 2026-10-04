@@ -117,8 +117,16 @@ def calculate_snr(inp: ETCInput) -> ETCOutput:
     noise_e = float(np.sqrt(variance))
     snr = float(stellar_e / noise_e) if noise_e > 0 else 0.0
 
+    widths = {"native": 0.2844, "apstar": 0.2229, "resolution": 2 * 0.2229}
+    if inp.snr_unit not in widths:
+        raise ValueError("snr_unit must be 'native', 'apstar', or 'resolution'")
+    # Equivalent-bin S/N; detector budget stays in native apCframe pixels.
+    scaled_snr = snr * np.sqrt(widths[inp.snr_unit] / widths["native"])
     return ETCOutput(
-        snr=snr,
+        snr=float(scaled_snr),
+        native_snr=snr,
+        snr_unit=inp.snr_unit,
+        snr_bin_width_angstrom=widths[inp.snr_unit],
         total_exptime_s=total_exptime_s,
         stellar_electrons=float(stellar_e),
         sky_electrons=float(sky_e),

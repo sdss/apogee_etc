@@ -22,6 +22,9 @@ with st.sidebar:
     obs = get_observatory(observatory)
     mode = st.radio("Mode", ["Predict S/N", "Exposure time for target S/N"])
 
+    snr_labels = {"native": "Native pixel (apCframe)",
+                  "apstar": "apStar pixel", "resolution": "Resolution element"}
+    snr_unit = st.selectbox("S/N unit", list(snr_labels), format_func=snr_labels.get)
     hmag = st.number_input("H magnitude", value=15.0, step=0.1)
     exptime_s = st.number_input("Exposure time per exposure [s]", value=500.0, step=50.0, min_value=1.0)
     nexp = st.number_input("Number of exposures", value=8, step=1, min_value=1)
@@ -52,6 +55,7 @@ with st.sidebar:
 
 inp = ETCInput(
     observatory=observatory,
+    snr_unit=snr_unit,
     hmag=hmag,
     exptime_s=exptime_s,
     nexp=int(nexp),
@@ -71,7 +75,7 @@ else:
     out = exposure_time_for_snr(inp, target_snr=target_snr)
 
 cols = st.columns(3)
-cols[0].metric("S/N per green-detector spectral pixel", f"{out.snr:.1f}")
+cols[0].metric(f"S/N per {snr_labels[snr_unit]}", f"{out.snr:.1f}")
 cols[1].metric("Total exposure", f"{out.total_exptime_s:.0f} s")
 cols[2].metric("Fiber fraction", f"{out.fiber_fraction:.3f}")
 
@@ -146,7 +150,7 @@ with st.expander("S/N versus H magnitude", expanded=True):
             ),
             y=alt.Y(
                 "S/N:Q",
-                title="Signal-to-Noise Ratio",
+                title=f"S/N per {snr_labels[snr_unit]}",
                 scale=alt.Scale(type="log"),
             ),
             tooltip=[
@@ -175,7 +179,10 @@ with st.expander("S/N versus H magnitude", expanded=True):
 st.caption(f"Per exposure: {out.exptime_per_exposure_s:.1f} s; "
            f"{out.nreads} total reads, {out.ngdreads} good reads. "
            "Timing uses 10.6 s per read; one initial read is discarded.")
-st.subheader("Noise variance budget [e⁻²]")
+st.caption(f"Green-detector bin width: {out.snr_bin_width_angstrom:.4f} Å. "
+           "Equivalent-bin S/N scales with the square root of bin width. "
+           "Dither sampling and resampling covariance are not modeled.")
+st.subheader("Noise variance budget per native apCframe pixel [e⁻²]")
 noise_budget = pd.DataFrame(
     {
         "component": ["Star", "Baseline sky", "Moon", "Galactic background", "Dark", "Read variance", "Empirical variance"],

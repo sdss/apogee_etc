@@ -203,3 +203,20 @@ spectral resolution-element width or the number of pixels in the aperture.
 It scales detector read variance and dark counts; measured extracted stellar
 and sky counts retain their existing normalization. The factor is approximate
 and should be checked using actual extraction weights.
+
+
+S/N bin units
+--------------
+
+Measured stellar and sky counts refer to native apCframe spectral pixels,
+without dither combination or resampling. Native green-detector width is
+0.2844 Angstrom; apStar width is 0.2229 Angstrom. The adopted resolution
+width is twice the apStar width, 0.4458 Angstrom. ``snr_unit`` accepts
+``native`` (default), ``apstar``, or ``resolution``. Output S/N is native S/N
+times sqrt(selected width / native width), and the solver targets this unit.
+``native_snr`` returns the original result. Electron counts and variance
+budget always refer to the native pixel; only the reported S/N changes.
+This equivalent-bin approximation assumes locally uniform spectral signal
+and noise density. It does not predict actual resampled-pixel covariance,
+dither-combination weights, or apStar pipeline uncertainty values. No extra
+exposure factor is applied when changing the S/N unit.
