@@ -12,6 +12,8 @@ st.set_page_config(page_title="APOGEE ETC", layout="centered")
 st.title("APOGEE Exposure Time Calculator")
 
 st.caption("Starter hybrid empirical/theoretical ETC. Placeholder constants should be calibrated from real data.")
+st.info("Stellar rates and sky backgrounds use measured green-detector levels. Seeing/airmass references and detector noise remain provisional. "
+        "The fractional noise floor is disabled; high-S/N predictions exclude systematic errors.")
 
 with st.sidebar:
     observatory = st.selectbox("Observatory", list_observatories())
@@ -33,9 +35,9 @@ with st.sidebar:
                         format_func=lambda value: value.capitalize())
     with st.expander("Background rates"):
         st.caption("Rates in e⁻/s/arcsec² for the spectral interval used by the ETC. "
-                   "Moon and Galactic coefficients start at zero pending calibration; "
+                   "Defaults use measured 500-second sky-fiber levels; "
                    "enter rates here to explore their effects.")
-        sky_rate = st.number_input("Atmospheric sky", min_value=0.0,
+        sky_rate = st.number_input("Moon-down high-latitude baseline", min_value=0.0,
                                    value=obs.default_sky_e_per_s_arcsec2, key=f"sky_{observatory}")
         moon_rate = st.number_input("Added background at full Moon", min_value=0.0,
                                     value=obs.full_moon_e_per_s_arcsec2, key=f"moon_{observatory}")
@@ -43,7 +45,7 @@ with st.sidebar:
                                     value=obs.galactic_high_e_per_s_arcsec2, key=f"high_{observatory}")
         low_rate = st.number_input("Added Galactic background: low latitude", min_value=0.0,
                                    value=obs.galactic_low_e_per_s_arcsec2, key=f"low_{observatory}")
-    st.caption("Moon background scales linearly with illumination at assumed fixed geometry. "
+    st.caption("At high latitude, Moon background scales linearly with illumination; at low latitude it is disabled. "
                "Moon altitude and target separation are not modeled.")
 
 inp = ETCInput(
@@ -67,7 +69,7 @@ else:
     out = exposure_time_for_snr(inp, target_snr=target_snr)
 
 cols = st.columns(3)
-cols[0].metric("S/N", f"{out.snr:.1f}")
+cols[0].metric("S/N per green-detector spectral pixel", f"{out.snr:.1f}")
 cols[1].metric("Total exposure", f"{out.total_exptime_s:.0f} s")
 cols[2].metric("Fiber fraction", f"{out.fiber_fraction:.3f}")
 
@@ -174,7 +176,7 @@ with st.expander("S/N versus H magnitude", expanded=True):
 st.subheader("Noise budget")
 noise_budget = pd.DataFrame(
     {
-        "component": ["Star", "Atmospheric sky", "Moon", "Galactic background", "Dark", "Read variance", "Empirical variance"],
+        "component": ["Star", "Baseline sky", "Moon", "Galactic background", "Dark", "Read variance", "Empirical variance"],
         "value": [
             out.stellar_electrons,
             out.atmospheric_sky_electrons,
@@ -188,6 +190,9 @@ noise_budget = pd.DataFrame(
 )
 st.dataframe(noise_budget, use_container_width=True)
 
+st.caption("Low-latitude 500-s levels: APO median 92, range 50–160; "
+           "LCO median 70, disk range 35–140, bulge range 40–225 e⁻/arcsec². "
+           "Use the editable Galactic increment to explore brighter or darker fields.")
 obs = get_observatory(observatory)
 st.subheader("Observatory config")
 st.json(obs.__dict__)
