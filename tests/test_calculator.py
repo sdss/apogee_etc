@@ -113,10 +113,10 @@ def test_measured_stellar_flux_at_reference(site,z):
 def test_measured_dark_conversion(site,adu,gain,rn):
     from apogee_etc.observatories import get_observatory
     obs=get_observatory(site)
-    assert np.isclose(obs.dark_current_e_per_s_pix,adu*gain/10.6)
+    assert np.isclose(obs.dark_current_e_per_s_pix,adu*gain/10.649)
     assert obs.single_read_noise_e==rn
     out=calculate_snr(ETCInput(observatory=site,exptime_s=500,nexp=2))
-    assert np.isclose(out.dark_electrons,adu*gain/10.6*obs.npix_per_resolution_element*out.total_exptime_s)
+    assert np.isclose(out.dark_electrons,adu*gain/10.649*obs.npix_per_resolution_element*out.total_exptime_s)
 
 
 @pytest.mark.parametrize('site', ['APO','LCO'])
@@ -125,17 +125,17 @@ def test_ramp_variance_and_discrete_solver(site):
     obs=get_observatory(site)
     inp=ETCInput(observatory=site,exptime_s=500,nexp=2)
     out=calculate_snr(inp)
-    assert out.nreads==48 and out.ngdreads==47
-    assert np.isclose(out.exptime_per_exposure_s,508.8)
-    a=12*46/(48*48)
-    c=6*(47**2+1)/(5*47*48)
+    assert out.nreads==47 and out.ngdreads==46
+    assert np.isclose(out.exptime_per_exposure_s,500.503)
+    a=12*45/(47*47)
+    c=6*(46**2+1)/(5*46*47)
     rn=2*obs.npix_per_resolution_element*a*obs.single_read_noise_e**2
     assert np.isclose(out.read_noise_variance_e2,rn)
     assert np.isclose(out.total_noise_electrons**2,
                       c*(out.stellar_electrons+out.sky_electrons+out.dark_electrons)+rn)
     result=exposure_time_for_snr(inp,20)
     assert result.snr>=20
-    assert calculate_snr(replace(inp,exptime_s=(result.nreads-1)*10.6)).snr<20
+    assert calculate_snr(replace(inp,exptime_s=(result.nreads-1)*10.649)).snr<20
     bounded=exposure_time_for_snr(inp,1e6,max_exptime_s=500)
     assert bounded.exptime_per_exposure_s<=500
 
@@ -161,7 +161,7 @@ def test_snr_units_and_solver(unit,width):
     assert out.total_noise_electrons==native.total_noise_electrons
     result=exposure_time_for_snr(inp,20)
     assert result.snr>=20 and result.snr_unit==unit
-    assert calculate_snr(replace(inp,exptime_s=(result.nreads-1)*10.6)).snr<20
+    assert calculate_snr(replace(inp,exptime_s=(result.nreads-1)*10.649)).snr<20
 
 
 def test_invalid_snr_unit():

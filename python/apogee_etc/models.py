@@ -34,7 +34,7 @@ class ObservatoryConfig:
     stellar_magnitude_slope: float = -0.4
     normalize_fiber_at_reference: bool = False
     single_read_noise_e: float | None = None
-    read_interval_s: float = 10.6
+    read_interval_s: float = 10.649
 
 
 @dataclass(frozen=True)

@@ -160,10 +160,10 @@ approximation; it does not multiply the measured stellar or sky counts.
 Measured dark current and single-read noise
 -------------------------------------------
 
-Dark input levels are ADU per detector pixel per 10.6-second read:
+Dark input levels are ADU per detector pixel per 10.649-second read:
 APO 0.071428575 and LCO 0.05102041. The configured electron rates are
-ADU/read * gain / 10.6: approximately 0.0128032351415 at APO and
-0.0144397386792 at LCO, in electrons/s/detector pixel.
+ADU/read * gain / 10.649: approximately 0.0127443227064 at APO and
+0.0143732960841 at LCO, in electrons/s/detector pixel.
 
 Measured single-read noise is stored separately as 20.9 electrons at APO
 and 24.0 at LCO. These values enter the ramp read-noise coefficient below. The legacy
@@ -174,7 +174,7 @@ extraction factor remains provisional pending extraction variance calibration.
 Ramp noise and whole-read timing
 --------------------------------
 
-The adopted ETC timing convention is exposure_time = nreads * 10.6 s.
+The adopted ETC timing convention is exposure_time = nreads * 10.649 s.
 Requested times round up to whole reads, with a minimum of three total reads
 (two good reads). One initial read is discarded: ngdreads = nreads - 1.
 All flux components use the resulting duration. The exposure-time solver

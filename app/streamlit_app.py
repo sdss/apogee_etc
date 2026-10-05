@@ -83,7 +83,7 @@ st.caption("Flux is sky-subtracted stellar electrons summed over all exposures; 
            "noise includes star, background, dark and read noise. "
            "Both use the selected pixel or resolution-element width.")
 cols = st.columns(2)
-cols[0].metric("Total exposure", f"{out.total_exptime_s:.1f} s")
+cols[0].metric("Total exposure", f"{out.total_exptime_s:.3f} s")
 cols[1].metric("Seeing flux factor", f"{out.seeing_flux_factor:.3f}")
 
 with st.expander("S/N, flux and noise versus H magnitude", expanded=True):
@@ -120,9 +120,9 @@ with st.expander("S/N, flux and noise versus H magnitude", expanded=True):
     st.caption(f"All curves use {snr_labels[snr_unit]} and the displayed total integration. "
                "Flux and noise are in electrons per bin; S/N is dimensionless.")
 
-st.caption(f"Per exposure: {out.exptime_per_exposure_s:.1f} s; "
+st.caption(f"Per exposure: {out.exptime_per_exposure_s:.3f} s; "
            f"{out.nreads} total reads, {out.ngdreads} good reads. "
-           "Timing uses 10.6 s per read; one initial read is discarded.")
+           "Timing uses 10.649 s per read; one initial read is discarded.")
 st.caption(f"Green-detector bin width: {out.snr_bin_width_angstrom:.4f} Å. "
            "Equivalent-bin S/N scales with the square root of bin width. "
            "Dither sampling and resampling covariance are not modeled.")

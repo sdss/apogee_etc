@@ -65,7 +65,7 @@ def calculate_snr(inp: ETCInput) -> ETCOutput:
     ngdreads = nreads - 1
     actual_exptime_s = nreads * obs.read_interval_s
     if not np.isclose(actual_exptime_s, inp.exptime_s, rtol=0, atol=1e-8):
-        warnings.append(f"Per-exposure time rounded up to {actual_exptime_s:.1f} s ({nreads} reads).")
+        warnings.append(f"Per-exposure time rounded up to {actual_exptime_s:.3f} s ({nreads} reads).")
     total_exptime_s = actual_exptime_s * inp.nexp
     star_rate, fiber_fraction = _stellar_rate_e_per_s(inp)
     stellar_e = star_rate * total_exptime_s
