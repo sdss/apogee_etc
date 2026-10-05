@@ -89,11 +89,12 @@ def test_measured_sky_levels(site,new,full,low):
         assert np.isclose(calculate_snr(replace(inp,galactic_latitude='low',moon_illumination=phase)).sky_electrons/area*500/calculate_snr(inp).exptime_per_exposure_s,low)
 
 
-@pytest.mark.parametrize('site,z,slope,gain,time', [
-    ('APO',7.6344033081894125,-0.4,1.9,457),
-    ('LCO',7.26616751714969,-0.4,3.0,447),
+@pytest.mark.parametrize('site,z', [
+    ('APO',5.286024848102618),
+    ('LCO',5.082818044301776),
 ])
-def test_measured_stellar_flux_at_reference(site,z,slope,gain,time):
+def test_measured_stellar_flux_at_reference(site,z):
+    time=500
     from apogee_etc.observatories import get_observatory
     obs=get_observatory(site)
     for h in (10,13,16):
@@ -101,7 +102,7 @@ def test_measured_stellar_flux_at_reference(site,z,slope,gain,time):
                      seeing_fwhm_arcsec=obs.seeing_ref_arcsec,
                      airmass=obs.airmass_ref)
         out=calculate_snr(inp)
-        assert np.isclose(out.stellar_electrons,gain*10**(z+slope*h)*out.exptime_per_exposure_s/time)
+        assert np.isclose(out.stellar_electrons,10**(z-.4*h)*out.total_exptime_s)
         worse=calculate_snr(replace(inp,seeing_fwhm_arcsec=2.0))
         assert worse.stellar_electrons < out.stellar_electrons
         assert np.isclose(calculate_snr(replace(inp,nexp=2)).stellar_electrons,
@@ -176,7 +177,7 @@ def test_flux_noise_selected_bin(unit,q):
     assert np.isclose(out.flux_electrons/out.noise_electrons,out.snr)
 
 
-@pytest.mark.parametrize('site,slope', [('APO',-.1793683081448493),('LCO',-.2110851442561022)])
+@pytest.mark.parametrize('site,slope', [('APO',-.17974092339286213),('LCO',-.21420982017607323)])
 def test_empirical_seeing_replaces_gaussian(site,slope):
     from apogee_etc.observatories import get_observatory
     obs=get_observatory(site)
@@ -189,7 +190,7 @@ def test_empirical_seeing_replaces_gaussian(site,slope):
     assert ref.seeing_flux_factor==1
 
 
-@pytest.mark.parametrize('site,slope', [('APO',-.21234465084552678),('LCO',-.11677194677614952)])
+@pytest.mark.parametrize('site,slope', [('APO',-.15628331623665812),('LCO',-.11268839513904064)])
 def test_joint_airmass_slope(site,slope):
     from apogee_etc.observatories import get_observatory
     obs=get_observatory(site)

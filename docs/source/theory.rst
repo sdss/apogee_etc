@@ -280,3 +280,21 @@ The rate intercept is Z + log10(gain/exposure_time). Reference conditions
 are seeing=1.58 arcsec, X=1.24 at APO and seeing=1.27, X=1.16 at LCO.
 These fitted terms describe measured instrumental throughput; they are not
 interpreted as atmospheric extinction alone. No Gaussian coupling is applied.
+
+
+Final rate-normalized joint calibration
+----------------------------------------
+
+This calibration supersedes the preceding ADU-based fits. All exposure
+zeropoints were measured with H-magnitude slope fixed at -0.4 and converted
+to electrons/s/native spectral pixel before the joint fit. Adopt directly:
+
+* APO: Z=5.286024848102618, seeing slope=-0.17974092339286213,
+  airmass slope=-0.15628331623665812.
+* LCO: Z=5.082818044301776, seeing slope=-0.21420982017607323,
+  airmass slope=-0.11268839513904064.
+
+No additional gain or exposure-normalization conversion is applied to these
+intercepts. Reference seeing/airmass remain 1.58/1.24 at APO and 1.27/1.16
+at LCO. Accumulated stellar electrons are the predicted rate multiplied by
+the total integration time.
