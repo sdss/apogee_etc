@@ -124,8 +124,22 @@ def calculate_snr(inp: ETCInput) -> ETCOutput:
     # Equivalent-bin S/N; detector budget stays in native apCframe pixels.
     bin_ratio = widths[inp.snr_unit] / widths["native"]
     scaled_snr = snr * np.sqrt(bin_ratio)
+    # Throughput prediction range; not an additional spectral-noise term.
+    # A common throughput factor is used for the total exposure sequence.
+    def throughput_case(factor):
+        signal = stellar_e * factor
+        noise = np.sqrt(photon_factor * (signal + sky_e + dark_e)
+                        + rn_var + (obs.empirical_noise_floor_frac * signal)**2)
+        flux_bin = signal * bin_ratio
+        noise_bin = noise * np.sqrt(bin_ratio)
+        return float(flux_bin), float(noise_bin), float(flux_bin / noise_bin)
+    lower = throughput_case(10**(-obs.throughput_scatter_dex))
+    upper = throughput_case(10**obs.throughput_scatter_dex)
     return ETCOutput(
         snr=float(scaled_snr),
+        flux_lower_electrons=lower[0], flux_upper_electrons=upper[0],
+        noise_lower_electrons=lower[1], noise_upper_electrons=upper[1],
+        snr_lower=lower[2], snr_upper=upper[2],
         flux_electrons=float(stellar_e * bin_ratio),
         seeing_flux_factor=float(10**(obs.seeing_slope_dex_per_arcsec *
             (inp.seeing_fwhm_arcsec - obs.seeing_ref_arcsec))) if inp.include_empirical_terms else 1.0,

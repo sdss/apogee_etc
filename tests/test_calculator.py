@@ -198,3 +198,16 @@ def test_joint_airmass_slope(site,slope):
     ref=calculate_snr(inp)
     higher=calculate_snr(replace(inp,airmass=obs.airmass_ref+.5))
     assert np.isclose(higher.stellar_electrons/ref.stellar_electrons,10**(slope*.5))
+
+
+@pytest.mark.parametrize('site', ['APO','LCO'])
+def test_throughput_prediction_ranges(site):
+    from apogee_etc.observatories import get_observatory
+    obs=get_observatory(site)
+    for unit in ['native','apvisit','apstar','resolution']:
+        out=calculate_snr(ETCInput(observatory=site,snr_unit=unit,nexp=4))
+        assert np.isclose(out.flux_upper_electrons/out.flux_electrons,10**obs.throughput_scatter_dex)
+        assert np.isclose(out.flux_lower_electrons/out.flux_electrons,10**(-obs.throughput_scatter_dex))
+        assert out.snr_lower < out.snr < out.snr_upper
+        assert out.noise_lower_electrons < out.noise_electrons < out.noise_upper_electrons
+        assert np.isclose(out.snr_lower,out.flux_lower_electrons/out.noise_lower_electrons)

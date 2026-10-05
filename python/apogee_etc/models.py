@@ -35,6 +35,7 @@ class ObservatoryConfig:
     normalize_fiber_at_reference: bool = False
     single_read_noise_e: float | None = None
     read_interval_s: float = 10.649
+    throughput_scatter_dex: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -83,3 +84,9 @@ class ETCOutput:
     flux_electrons: float = 0.0
     noise_electrons: float = 0.0
     seeing_flux_factor: float = 1.0
+    flux_lower_electrons: float = 0.0
+    flux_upper_electrons: float = 0.0
+    noise_lower_electrons: float = 0.0
+    noise_upper_electrons: float = 0.0
+    snr_lower: float = 0.0
+    snr_upper: float = 0.0

@@ -79,6 +79,9 @@ cols = st.columns(3)
 cols[0].metric(f"S/N per {snr_labels[snr_unit]}", f"{out.snr:.1f}")
 cols[1].metric("Stellar flux [e⁻/bin]", f"{out.flux_electrons:,.2f}")
 cols[2].metric("Noise, 1σ [e⁻/bin]", f"{out.noise_electrons:,.2f}")
+st.caption(f"Throughput prediction ranges: S/N {out.snr_lower:.1f}–{out.snr_upper:.1f}; "
+           f"flux {out.flux_lower_electrons:,.1f}–{out.flux_upper_electrons:,.1f} e⁻; "
+           f"noise {out.noise_lower_electrons:,.1f}–{out.noise_upper_electrons:,.1f} e⁻.")
 st.caption("Flux is sky-subtracted stellar electrons summed over all exposures; "
            "noise includes star, background, dark and read noise. "
            "Both use the selected pixel or resolution-element width.")
@@ -96,7 +99,10 @@ with st.expander("S/N, flux and noise versus H magnitude", expanded=True):
         grid_out = calculate_snr(replace(inp, hmag=float(h),
                                        exptime_s=out.exptime_per_exposure_s))
         rows.append({"H magnitude": h, "S/N": grid_out.snr,
-                     "Flux": grid_out.flux_electrons, "Noise": grid_out.noise_electrons})
+                     "Flux": grid_out.flux_electrons, "Noise": grid_out.noise_electrons,
+                     "S/N lower": grid_out.snr_lower, "S/N upper": grid_out.snr_upper,
+                     "Flux lower": grid_out.flux_lower_electrons, "Flux upper": grid_out.flux_upper_electrons,
+                     "Noise lower": grid_out.noise_lower_electrons, "Noise upper": grid_out.noise_upper_electrons})
     df = pd.DataFrame(rows)
     plot_df = df.melt(id_vars="H magnitude", value_vars=["S/N", "Flux", "Noise"],
                       var_name="Quantity", value_name="Value")
@@ -116,7 +122,17 @@ with st.expander("S/N, flux and noise versus H magnitude", expanded=True):
         color=alt.Color("Quantity:N", scale=colors, title="Quantity"),
         tooltip=["Quantity:N", alt.Tooltip("Value:Q", format=".2f")],
     )
-    st.altair_chart(chart + marker, use_container_width=True)
+    bands = pd.concat([pd.DataFrame({"H magnitude": df["H magnitude"],
+                        "Quantity": quantity, "Lower": df[f"{quantity} lower"],
+                        "Upper": df[f"{quantity} upper"]})
+                       for quantity in ["S/N", "Flux", "Noise"]], ignore_index=True)
+    band = alt.Chart(bands).mark_area(opacity=0.14).encode(
+        x="H magnitude:Q", y=alt.Y("Lower:Q", scale=alt.Scale(type="log")),
+        y2="Upper:Q", color=alt.Color("Quantity:N", scale=colors, title="Quantity"))
+    st.altair_chart(band + chart + marker, use_container_width=True)
+    st.caption(f"Shaded ranges use ±{obs.throughput_scatter_dex:.4f} dex empirical throughput scatter. "
+               "They describe prediction variability, not extra spectral noise or a guaranteed 68% interval. "
+               "The range assumes a shared throughput offset across exposures and is not divided by √N.")
     st.caption(f"All curves use {snr_labels[snr_unit]} and the displayed total integration. "
                "Flux and noise are in electrons per bin; S/N is dimensionless.")
 

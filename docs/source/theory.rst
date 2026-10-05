@@ -298,3 +298,18 @@ No additional gain or exposure-normalization conversion is applied to these
 intercepts. Reference seeing/airmass remain 1.58/1.24 at APO and 1.27/1.16
 at LCO. Accumulated stellar electrons are the predicted rate multiplied by
 the total integration time.
+
+
+Throughput prediction ranges
+-----------------------------
+
+Robust residual scatter is 0.06425145257251579 dex at APO and
+0.07122455533578975 at LCO. Prediction bands evaluate stellar rates scaled
+by 10**(+/-scatter), keeping sky, dark and read variance fixed. Photon noise
+is recomputed for each case; S/N is not simply assigned the flux fractional
+uncertainty. The nominal relation is unchanged; median residual offsets are
+not applied. The ranges are empirical scatter bands, not formal confidence
+intervals or guaranteed 68-percent coverage. They are separate from the
+spectral-noise budget and do not cap S/N. A common throughput offset is
+assumed for all exposures: no independent-exposure averaging reduction is
+claimed without data demonstrating independence.
