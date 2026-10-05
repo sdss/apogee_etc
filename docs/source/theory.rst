@@ -262,3 +262,21 @@ Absolute fiber throughput is already included in the stellar normalization.
 These empirical slopes describe observed counts; extrapolation beyond the
 measured seeing range remains unvalidated. The older Gaussian discussion
 above documents the previous model, not the current default.
+
+
+Updated joint stellar calibration
+----------------------------------
+
+The current calibration supersedes the earlier stellar fits and separate
+seeing/airmass fits. With magnitude slope fixed at -0.4, the joint ADU
+zeropoints and coefficients are:
+
+* APO: reference Z=7.6344033081894125 at 457 s, gain=1.9,
+  seeing slope=-0.1793683081448493, airmass slope=-0.21234465084552678.
+* LCO: reference Z=7.26616751714969 at 447 s, gain=3.0,
+  seeing slope=-0.2110851442561022, airmass slope=-0.11677194677614952.
+
+The rate intercept is Z + log10(gain/exposure_time). Reference conditions
+are seeing=1.58 arcsec, X=1.24 at APO and seeing=1.27, X=1.16 at LCO.
+These fitted terms describe measured instrumental throughput; they are not
+interpreted as atmospheric extinction alone. No Gaussian coupling is applied.
