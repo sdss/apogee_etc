@@ -14,7 +14,7 @@ st.set_page_config(page_title="APOGEE ETC", layout="centered")
 st.title("APOGEE Exposure Time Calculator")
 
 st.caption("Starter hybrid empirical/theoretical ETC. Placeholder constants should be calibrated from real data.")
-st.info("Stellar rates and sky backgrounds use measured green-detector levels. Seeing/airmass references and detector noise remain provisional. "
+st.info("Stellar rates and sky backgrounds use measured green-detector levels. "
         "The fractional noise floor is disabled; high-S/N predictions exclude systematic errors.")
 
 with st.sidebar:
@@ -85,9 +85,7 @@ st.caption(f"Throughput prediction ranges: S/N {out.snr_lower:.1f}–{out.snr_up
 st.caption("Flux is sky-subtracted stellar electrons summed over all exposures; "
            "noise includes star, background, dark and read noise. "
            "Both use the selected pixel or resolution-element width.")
-cols = st.columns(2)
-cols[0].metric("Total exposure", f"{out.total_exptime_s:.3f} s")
-cols[1].metric("Seeing flux factor", f"{out.seeing_flux_factor:.3f}")
+st.metric("Total exposure", f"{out.total_exptime_s:.3f} s")
 
 with st.expander("S/N, flux and noise versus H magnitude", expanded=True):
     plot_range = st.slider("Magnitude range about target", 1.0, 6.0, 3.0, 0.5)
