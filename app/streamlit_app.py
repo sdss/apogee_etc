@@ -145,7 +145,7 @@ noise_budget = pd.DataFrame(
     {
         "component": ["Star", "Baseline sky", "Moon", "Galactic background", "Dark", "Read variance", "Empirical variance"],
         "value": [
-            out.ramp_photon_variance_factor * out.stellar_electrons,
+            out.ramp_photon_variance_factor * obs.stellar_photon_variance_factor * out.stellar_electrons,
             out.ramp_photon_variance_factor * out.atmospheric_sky_electrons,
             out.ramp_photon_variance_factor * out.moon_electrons,
             out.ramp_photon_variance_factor * out.galactic_electrons,

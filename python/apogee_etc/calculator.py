@@ -113,7 +113,7 @@ def calculate_snr(inp: ETCInput) -> ETCOutput:
               * read_factor * single_read_noise**2)
     empirical_var = (obs.empirical_noise_floor_frac * stellar_e) ** 2
 
-    variance = photon_factor * (stellar_e + sky_e + dark_e) + rn_var + empirical_var
+    variance = photon_factor * (obs.stellar_photon_variance_factor * stellar_e + sky_e + dark_e) + rn_var + empirical_var
     noise_e = float(np.sqrt(variance))
     snr = float(stellar_e / noise_e) if noise_e > 0 else 0.0
 
@@ -128,7 +128,7 @@ def calculate_snr(inp: ETCInput) -> ETCOutput:
     # A common throughput factor is used for the total exposure sequence.
     def throughput_case(factor):
         signal = stellar_e * factor
-        noise = np.sqrt(photon_factor * (signal + sky_e + dark_e)
+        noise = np.sqrt(photon_factor * (obs.stellar_photon_variance_factor * signal + sky_e + dark_e)
                         + rn_var + (obs.empirical_noise_floor_frac * signal)**2)
         flux_bin = signal * bin_ratio
         noise_bin = noise * np.sqrt(bin_ratio)

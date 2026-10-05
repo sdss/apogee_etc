@@ -36,6 +36,7 @@ class ObservatoryConfig:
     single_read_noise_e: float | None = None
     read_interval_s: float = 10.649
     throughput_scatter_dex: float = 0.0
+    stellar_photon_variance_factor: float = 1.0
 
 
 @dataclass(frozen=True)

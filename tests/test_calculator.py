@@ -132,7 +132,7 @@ def test_ramp_variance_and_discrete_solver(site):
     rn=2*obs.npix_per_resolution_element*a*obs.single_read_noise_e**2
     assert np.isclose(out.read_noise_variance_e2,rn)
     assert np.isclose(out.total_noise_electrons**2,
-                      c*(out.stellar_electrons+out.sky_electrons+out.dark_electrons)+rn)
+                      c*(obs.stellar_photon_variance_factor*out.stellar_electrons+out.sky_electrons+out.dark_electrons)+rn)
     result=exposure_time_for_snr(inp,20)
     assert result.snr>=20
     assert calculate_snr(replace(inp,exptime_s=(result.nreads-1)*10.649)).snr<20
@@ -211,3 +211,16 @@ def test_throughput_prediction_ranges(site):
         assert out.snr_lower < out.snr < out.snr_upper
         assert out.noise_lower_electrons < out.noise_electrons < out.noise_upper_electrons
         assert np.isclose(out.snr_lower,out.flux_lower_electrons/out.noise_lower_electrons)
+
+
+@pytest.mark.parametrize('site', ['APO','LCO'])
+def test_empirical_profile_factors(site):
+    from apogee_etc.observatories import get_observatory
+    obs=get_observatory(site)
+    assert obs.npix_per_resolution_element==3.7444072079837682
+    assert obs.stellar_photon_variance_factor==1.178447668371803
+    out=calculate_snr(ETCInput(observatory=site,nexp=2))
+    variance=out.ramp_photon_variance_factor*(
+        obs.stellar_photon_variance_factor*out.stellar_electrons
+        +out.sky_electrons+out.dark_electrons)+out.read_noise_variance_e2
+    assert np.isclose(out.total_noise_electrons**2,variance)

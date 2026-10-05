@@ -313,3 +313,19 @@ intervals or guaranteed 68-percent coverage. They are separate from the
 spectral-noise budget and do not cap S/N. A common throughput offset is
 assumed for all exposures: no independent-exposure averaging reduction is
 claimed without data demonstrating independence.
+
+
+Measured extraction variance factors (current)
+-----------------------------------------------
+
+Both sites adopt the measured profile factors, including neighboring fibers:
+read/dark factor = 3.7444072079837682 and target stellar photon factor =
+1.178447668371803. The APO values are adopted from the measured LCO profile,
+not independently measured APO factors. This supersedes the earlier factor 3.
+The stellar term is ramp_coefficient * stellar_factor * stellar_electrons.
+Read variance and detector dark counts use the read/dark factor. Empirical
+throughput prediction ranges recompute the corrected stellar photon term.
+Measured sky counts retain the previous photon treatment: no stellar-profile
+factor is applied to sky without establishing its detector spatial profile.
+No unexplained additive variance offset is introduced; the remaining as1D
+intercept discrepancy is not absorbed into these factors.
